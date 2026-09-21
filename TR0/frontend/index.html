@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Examen</title>
+</head>
+<body>
+
+    <h1>Test de Conducir</h1>
+    <div id="preguntas-container"></div>
+
+    <script>
+        fetch('/data-client')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Preguntas cargadas:", data.preguntes_client);
+            })
+            .catch(error => {
+                console.error("Error al cargar los datos:", error);
+            });
+    </script>
+</body>
+</html>
