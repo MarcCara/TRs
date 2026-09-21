@@ -48,8 +48,8 @@ app.get('/preguntes', (req, res) => {
 
   //Se envian las preguntas y la ID de la sesion
   res.json({
-    id_partida: sessionId,
-    preguntes_client: preguntesSeleccionades
+    sessionId: sessionId,
+    questions: clientQuestions  
   });
 });
 
