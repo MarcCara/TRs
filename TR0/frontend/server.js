@@ -10,10 +10,13 @@ const { v4: uuidv4 } = require('uuid');
 const preguntes = require('../backend/preguntes.json');
 const respostes = require('../backend/respuestas.json');
 
+//Variable para guardar las sesiones
+const sessions = new Map();
+
 app.get('/preguntes', (req, res) => {
   //Genera la partida
   const sessionId = uuidv4();
-  console.log(`Nova partida iniciada! ID de la sessió: ${sessionId}`);
+  console.log(`Partida Iniciada ID de la sessió: ${sessionId}`);
 
   //Barajar las preguntas
   const totesLesPreguntes = preguntes.preguntes_client;
@@ -21,6 +24,27 @@ app.get('/preguntes', (req, res) => {
   
   //Se seleccionan 10 preguntas
   const preguntesSeleccionades = preguntesMezclades.slice(0, 10);
+
+  //Usamos .map() para recorrer el array y quedarnos solo el id de las 10 preguntas.
+  const idsSeleccionats = preguntesSeleccionades.map(p => p.id);
+
+  //Guardem la sessió al map
+  sessions.set(sessionId, {
+    questions: idsSeleccionats
+  });
+
+  // Mostramos por consola que se ha guardado correctamente
+  if (sessions.has(sessionId)) {
+    console.log("Sessió guardada correctament al servidor:", sessions.get(sessionId));
+  }
+
+  //Por seguridad filtraremos las preguntas para que solo se envien los campos permitidos
+  const clientQuestions = preguntesSeleccionades.map(q => ({
+    id: q.id,
+    pregunta: q.pregunta,
+    opcions: q.opcions,
+    imatge: q.imatge
+  }));
 
   //Se envian las preguntas y la ID de la sesion
   res.json({
