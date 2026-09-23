@@ -3,22 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test de Examen</title>
+    <title>Test de Conduir</title>
+    <style>
+        .hidden {
+            display: none !important;
+        }
+        #seccio-usuari {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        #panell-info {
+            display: flex;
+            justify-content: space-between;
+            background-color: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        /* Estils nous per la navegació */
+        #controls-navegacio {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .pregunta-contenidor {
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        /* Estil per ressaltar l'opció seleccionada */
+        .btn-resposta.seleccionada {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
 </head>
 <body>
 
-    <h1>Test de Conducir</h1>
-    <div id="preguntas-container"></div>
+    <h1>Test de Conduir</h1>
+
+    <div id="seccio-usuari">
+        <div id="formulari-nom">
+            <label for="input-nom">Introdueix el teu nom:</label>
+            <input type="text" id="input-nom" placeholder="El teu nom">
+            <button id="btn-guardar-nom">Guardar</button>
+        </div>
+        
+        <div id="salutacio-usuari" class="hidden">
+            <h3 id="missatge-salutacio" style="margin-top: 0;"></h3>
+            <button id="btn-esborrar-nom">Esborrar nom</button>
+        </div>
+    </div>
+    
+    <div id="panell-info">
+        <div id="marcador"></div>
+        <div id="temporitzador"><strong>Temps: 0s</strong></div>
+    </div>
+    
+    <div id="partida"></div>
+    
+    <!-- NOU: Botons de navegació (ocults al principi) -->
+    <div id="controls-navegacio" class="hidden">
+        <button id="btn-anterior">Anterior</button>
+        <button id="btn-seguent">Següent</button>
+        <button id="btn-enviar" class="hidden">Enviar Resultats</button>
+    </div>
 
     <script>
-        fetch('/data-client')
+        function gestionarUsuari() {
+            const nomGuardat = localStorage.getItem('nomUsuari');
+            if (nomGuardat) {
+                document.getElementById('formulari-nom').classList.add('hidden');
+                document.getElementById('salutacio-usuari').classList.remove('hidden');
+                document.getElementById('missatge-salutacio').textContent = `Hola, ${nomGuardat}! Benvingut de nou.`;
+            } else {
+                document.getElementById('formulari-nom').classList.remove('hidden');
+                document.getElementById('salutacio-usuari').classList.add('hidden');
+            }
+        }
+        gestionarUsuari();
+
+        document.getElementById('btn-guardar-nom').addEventListener('click', function() {
+            const nom = document.getElementById('input-nom').value;
+            if (nom) { localStorage.setItem('nomUsuari', nom); gestionarUsuari(); }
+        });
+
+        document.getElementById('btn-esborrar-nom').addEventListener('click', function() {
+            localStorage.removeItem('nomUsuari'); document.getElementById('input-nom').value = ""; gestionarUsuari(); 
+        });
+
+        // --- LÒGICA DE LA PARTIDA ---
+        let estatDeLaPartida = { 
+            preguntaActualIndex: 0, // Ara és un índex de navegació
+            respostesUsuari: [],    // Guardarem respostes a l'índex corresponent
+            tempsTranscorregut: 0 
+        };
+        
+        let llistaPreguntes = [];
+        let intervalTemps;
+
+        fetch('/preguntes')
             .then(response => response.json())
-            .then(data => {
-                console.log("Preguntas cargadas:", data.preguntes_client);
-            })
-            .catch(error => {
-                console.error("Error al cargar los datos:", error);
+            .then(data => { iniciarPartida(data.questions); })
+            .catch(error => console.error(error));
+
+        function iniciarPartida(preguntes) {
+            llistaPreguntes = preguntes;
+            // Inicialitzem l'array de respostes amb espais buits
+            estatDeLaPartida.respostesUsuari = new Array(preguntes.length).fill(null);
+            
+            generarTotesLesPreguntes(); // Generem el DOM sencer
+            actualitzarVista();         // Mostrem només la primera
+            iniciarTemporitzador();      
+        }
+
+        function iniciarTemporitzador() {
+            intervalTemps = setInterval(function() {
+                estatDeLaPartida.tempsTranscorregut++;
+                document.getElementById('temporitzador').innerHTML = `<strong>Temps: ${estatDeLaPartida.tempsTranscorregut}s</strong>`;
+            }, 1000);
+        }
+
+        // NOU: Generem tots els divs de cop
+        function generarTotesLesPreguntes() {
+            const contenidorPartida = document.getElementById('partida');
+            let htmlTotal = '';
+
+            llistaPreguntes.forEach((preg, index) => {
+                const botonsHTML = preg.opcions.map(opcion => 
+                    `<button class="btn-resposta" data-index="${index}">${opcion}</button>`
+                ).join(' ');
+
+                // Cada pregunta és un div. Les amaguem totes per defecte afegint 'hidden'
+                htmlTotal += `
+                    <div id="pregunta-div-${index}" class="pregunta-contenidor hidden">
+                        <h2>${index + 1}. ${preg.pregunta}</h2>
+                        ${botonsHTML}
+                    </div>
+                `;
             });
+
+            contenidorPartida.innerHTML = htmlTotal;
+            document.getElementById('controls-navegacio').classList.remove('hidden');
+        }
+
+        // NOU: Funció que controla què s'ensenya i què s'amaga
+        function actualitzarVista() {
+            // 1. Amaguem totes les preguntes
+            document.querySelectorAll('.pregunta-contenidor').forEach(div => {
+                div.classList.add('hidden');
+            });
+
+            // 2. Mostrem només la pregunta actual
+            document.getElementById(`pregunta-div-${estatDeLaPartida.preguntaActualIndex}`).classList.remove('hidden');
+
+            // 3. Gestionem els botons Anterior/Següent
+            const btnAnterior = document.getElementById('btn-anterior');
+            const btnSeguent = document.getElementById('btn-seguent');
+            const btnEnviar = document.getElementById('btn-enviar');
+
+            // Desactivar "Anterior" si estem a la primera
+            btnAnterior.disabled = (estatDeLaPartida.preguntaActualIndex === 0);
+
+            // Si estem a l'última, amaguem "Següent" i mostrem "Enviar Resultats"
+            if (estatDeLaPartida.preguntaActualIndex === llistaPreguntes.length - 1) {
+                btnSeguent.classList.add('hidden');
+                btnEnviar.classList.remove('hidden');
+                
+                // Opcional: Aturem el temps si l'usuari ha arribat al final i ha contestat tot
+                if (!estatDeLaPartida.respostesUsuari.includes(null)) {
+                    clearInterval(intervalTemps);
+                }
+            } else {
+                btnSeguent.classList.remove('hidden');
+                btnEnviar.classList.add('hidden');
+            }
+
+            renderitzarMarcador();
+        }
+
+        // NOU: Escoltem els botons de navegació
+        document.getElementById('btn-anterior').addEventListener('click', () => {
+            if (estatDeLaPartida.preguntaActualIndex > 0) {
+                estatDeLaPartida.preguntaActualIndex--;
+                actualitzarVista();
+            }
+        });
+
+        document.getElementById('btn-seguent').addEventListener('click', () => {
+            if (estatDeLaPartida.preguntaActualIndex < llistaPreguntes.length - 1) {
+                estatDeLaPartida.preguntaActualIndex++;
+                actualitzarVista();
+            }
+        });
+
+        function renderitzarMarcador() {
+            // Comptem quantes respostes no són "null"
+            const respostesFetes = estatDeLaPartida.respostesUsuari.filter(r => r !== null).length;
+            document.getElementById('marcador').innerHTML = `<strong>Preguntes respostes: ${respostesFetes} de ${llistaPreguntes.length}</strong>`;
+        }
+
+        document.getElementById('partida').addEventListener('click', function(event) {
+            if (event.target.classList.contains('btn-resposta')) {
+                const indexPregunta = parseInt(event.target.getAttribute('data-index'));
+                const opcioSeleccionada = event.target.textContent;
+                
+                // Guardem la resposta a la posició exacta de l'array
+                estatDeLaPartida.respostesUsuari[indexPregunta] = opcioSeleccionada;
+                
+                // Efecte visual: traiem la classe 'seleccionada' de tots els botons d'aquesta pregunta
+                const botonsAquestaPregunta = document.getElementById(`pregunta-div-${indexPregunta}`).querySelectorAll('.btn-resposta');
+                botonsAquestaPregunta.forEach(btn => btn.classList.remove('seleccionada'));
+                
+                // Marquem només el botó clicat
+                event.target.classList.add('seleccionada');
+
+                // Ja no passem automàticament a la següent pregunta, ho fa l'usuari amb el botó!
+                renderitzarMarcador();
+            }
+        });
+        // NOU: Lògica per al botó d'Enviar Resultats
+        document.getElementById('btn-enviar').addEventListener('click', function() {
+            // 1. Comprovem si ha respost totes les preguntes abans de deixar-lo enviar
+            if (estatDeLaPartida.respostesUsuari.includes(null)) {
+                alert("Si us plau, respon totes les preguntes abans d'enviar el test.");
+                return; // Si falten preguntes, aturem la funció aquí
+            }
+
+            // 2. Aturem el temps definitivament
+            clearInterval(intervalTemps);
+            
+            // 3. Amaguem els controls de navegació (Anterior, Següent, Enviar)
+            document.getElementById('controls-navegacio').classList.add('hidden');
+            
+            // 4. Mostrem el missatge de finalització substituint les preguntes
+            document.getElementById('partida').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <h2>Test Finalitzat! 🏁</h2>
+                    <p>Has completat les ${llistaPreguntes.length} preguntes.</p>
+                    <p>Temps total: <strong>${estatDeLaPartida.tempsTranscorregut} segons</strong>.</p>
+                    <p><em>(A la propera iteració enviarem aquestes dades al servidor)</em></p>
+                </div>
+            `;
+
+            // 5. Mostrem per consola el que enviarem al servidor més endavant
+            console.log("Test enviat! Dades a processar:", estatDeLaPartida.respostesUsuari);
+        });
     </script>
 </body>
 </html>

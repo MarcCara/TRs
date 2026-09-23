@@ -1,17 +1,18 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const port = 3000;
+const port = 3000;  
+//const port = Number(process.argv[2]) || 40400;
 
-// Importem la llibreria per generar IDs únics
 const { v4: uuidv4 } = require('uuid');
-
-//Importem els JSON amb les preguntes i respostes
 const preguntes = require('../backend/preguntes.json');
 const respostes = require('../backend/respuestas.json');
 
-//Variable para guardar las sesiones
 const sessions = new Map();
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.get('/preguntes', (req, res) => {
   //Genera la partida
