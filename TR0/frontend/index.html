@@ -19,7 +19,7 @@
         
         <div id="salutacio-usuari" class="hidden">
             <h3 id="missatge-salutacio" style="margin-top: 0;"></h3>
-            <button id="btn-esborrar-nom">Esborrar nom</button>
+            <button id="btn-esborrar-nom">Cerrar sesión</button>
         </div>
     </div>
     
@@ -49,6 +49,7 @@
                 document.getElementById('salutacio-usuari').classList.add('hidden');
             }
         }
+        localStorage.removeItem('nomUsuari');
         gestionarUsuari();
 
         document.getElementById('btn-guardar-nom').addEventListener('click', function() {
@@ -61,7 +62,31 @@
         });
 
         document.getElementById('btn-esborrar-nom').addEventListener('click', function() {
-            localStorage.removeItem('nomUsuari'); document.getElementById('input-nom').value = ""; gestionarUsuari(); 
+            // Detener y limpiar el temporizador
+            clearInterval(intervalTemps);
+            estatDeLaPartida.tempsTranscorregut = 0;
+
+            // Eliminar la sesión del usuario
+            localStorage.removeItem('nomUsuari');
+            document.getElementById('input-nom').value = '';
+
+            // Ocultar el test y sus controles
+            document.getElementById('panell-info').classList.add('hidden');
+            document.getElementById('partida').classList.add('hidden');
+            document.getElementById('controls-navegacio').classList.add('hidden');
+
+            // Limpiar el contenido y reiniciar los datos
+            document.getElementById('partida').innerHTML = '';
+            document.getElementById('temporitzador').innerHTML =
+                '<strong>Temps: 0s</strong>';
+
+            estatDeLaPartida.preguntaActualIndex = 0;
+            estatDeLaPartida.respostesUsuari = [];
+            llistaPreguntes = [];
+            partidaIniciada = false;
+
+            // Volver a mostrar la pantalla de identificación
+            gestionarUsuari();
         });
 
         // --- LÒGICA DE LA PARTIDA ---
@@ -86,10 +111,6 @@
                     partidaIniciada = false;
                     console.error(error);
                 });
-        }
-
-        if (localStorage.getItem('nomUsuari')) {
-            iniciarTest();
         }
 
         function iniciarPartida(preguntes) {
