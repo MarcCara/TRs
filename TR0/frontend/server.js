@@ -10,6 +10,8 @@ const respostes = require('../backend/respuestas.json');
 
 const sessions = new Map();
 
+app.use(express.static(__dirname));
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });

@@ -1,0 +1,213 @@
+:root {
+    --ink: #172033;
+    --muted: #647086;
+    --accent: #d85a3a;
+    --accent-dark: #b9462b;
+    --surface: #ffffff;
+    --line: #e6e9ef;
+    --soft: #f4f6f8;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 42px 24px 64px;
+    color: var(--ink);
+    background: linear-gradient(135deg, #f8f4ee 0%, #edf3f5 100%);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1.5;
+}
+
+h1 {
+    margin: 0 0 28px;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    border: 0;
+    border-radius: 7px;
+    padding: 10px 16px;
+    color: #fff;
+    background: var(--ink);
+    cursor: pointer;
+    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+button:hover:not(:disabled) {
+    background: var(--accent-dark);
+    box-shadow: 0 5px 12px rgba(23, 32, 51, 0.16);
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+}
+
+input {
+    min-width: 220px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 7px;
+    padding: 10px 12px;
+    color: var(--ink);
+    background: #fff;
+}
+
+input:focus-visible,
+button:focus-visible {
+    outline: 3px solid rgba(216, 90, 58, 0.35);
+    outline-offset: 2px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#seccio-usuari {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+    padding: 20px 22px;
+    border-radius: 12px;
+    color: #fff;
+    background: var(--accent);
+    box-shadow: 0 12px 26px rgba(216, 90, 58, 0.18);
+}
+
+#formulari-nom {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#salutacio-usuari {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 14px;
+}
+
+#salutacio-usuari h3 {
+    margin: 0 !important;
+}
+
+#panell-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.75);
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.92rem;
+}
+
+#controls-navegacio {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+#btn-anterior {
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid #ccd2dc;
+}
+
+#btn-anterior:hover:not(:disabled) {
+    color: #fff;
+    border-color: var(--accent-dark);
+}
+
+.pregunta-contenidor {
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 14px 32px rgba(23, 32, 51, 0.08);
+    animation: aparicio 280ms ease both;
+}
+
+.pregunta-contenidor h2 {
+    margin: 0 0 24px;
+    font-size: clamp(1.25rem, 3vw, 1.8rem);
+    line-height: 1.25;
+}
+
+.btn-resposta {
+    width: 100%;
+    margin-top: 10px;
+    color: var(--ink);
+    text-align: left;
+    background: var(--soft);
+    border: 1px solid var(--line);
+}
+
+.btn-resposta:hover:not(:disabled) {
+    color: #fff;
+}
+
+.btn-resposta.seleccionada {
+    color: #fff;
+    background-color: #23806a;
+    border-color: #23806a;
+}
+
+@keyframes aparicio {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 28px 14px 42px;
+    }
+
+    #seccio-usuari,
+    #panell-info {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    #formulari-nom,
+    #formulari-nom input,
+    #formulari-nom button {
+        width: 100%;
+    }
+
+    #salutacio-usuari {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .pregunta-contenidor {
+        padding: 22px 18px;
+    }
+
+    #controls-navegacio {
+        justify-content: stretch;
+    }
+
+    #controls-navegacio button {
+        flex: 1;
+    }
+}
