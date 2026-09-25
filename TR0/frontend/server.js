@@ -1,10 +1,10 @@
-const express = require('express');
+const express = require('../backend/node_modules/express');
 const path = require('path');
 const app = express();
 const port = 3000;  
 //const port = Number(process.argv[2]) || 40400;
 
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require('../backend/node_modules/uuid/dist-node/index.js');
 const preguntes = require('../backend/preguntes.json');
 const respostes = require('../backend/respuestas.json');
 
