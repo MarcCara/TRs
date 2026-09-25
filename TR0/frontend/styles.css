@@ -172,6 +172,27 @@ button:focus-visible {
     border-color: #23806a;
 }
 
+.resultat-final {
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 14px 32px rgba(23, 32, 51, 0.08);
+}
+
+.resultat-final h2 {
+    margin-top: 0;
+}
+
+.resultat-final h3 {
+    margin-top: 26px;
+    color: var(--accent-dark);
+}
+
+.resultat-final li {
+    margin-bottom: 8px;
+}
+
 @keyframes aparicio {
     from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
@@ -210,4 +231,10 @@ button:focus-visible {
     #controls-navegacio button {
         flex: 1;
     }
+}
+.res-incorect{
+    color: #d90202
+}
+.res-correct{
+    color: rgb(0, 175, 0);
 }

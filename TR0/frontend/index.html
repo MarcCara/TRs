@@ -23,12 +23,12 @@
         </div>
     </div>
     
-    <div id="panell-info">
+    <div id="panell-info" class="hidden">
         <div id="marcador"></div>
         <div id="temporitzador"><strong>Temps: 0s</strong></div>
     </div>
     
-    <div id="partida"></div>
+    <div id="partida" class="hidden"></div>
     
     <!-- NOU: Botons de navegació (ocults al principi) -->
     <div id="controls-navegacio" class="hidden">
@@ -52,8 +52,12 @@
         gestionarUsuari();
 
         document.getElementById('btn-guardar-nom').addEventListener('click', function() {
-            const nom = document.getElementById('input-nom').value;
-            if (nom) { localStorage.setItem('nomUsuari', nom); gestionarUsuari(); }
+            const nom = document.getElementById('input-nom').value.trim();
+            if (nom) {
+                localStorage.setItem('nomUsuari', nom);
+                gestionarUsuari();
+                iniciarTest();
+            }
         });
 
         document.getElementById('btn-esborrar-nom').addEventListener('click', function() {
@@ -69,14 +73,29 @@
         
         let llistaPreguntes = [];
         let intervalTemps;
+        let partidaIniciada = false;
 
-        fetch('/preguntes')
-            .then(response => response.json())
-            .then(data => { iniciarPartida(data.questions); })
-            .catch(error => console.error(error));
+        function iniciarTest() {
+            if (partidaIniciada) return;
+            partidaIniciada = true;
+
+            fetch('/preguntes')
+                .then(response => response.json())
+                .then(data => { iniciarPartida(data.questions); })
+                .catch(error => {
+                    partidaIniciada = false;
+                    console.error(error);
+                });
+        }
+
+        if (localStorage.getItem('nomUsuari')) {
+            iniciarTest();
+        }
 
         function iniciarPartida(preguntes) {
             llistaPreguntes = preguntes;
+            document.getElementById('panell-info').classList.remove('hidden');
+            document.getElementById('partida').classList.remove('hidden');
             // Inicialitzem l'array de respostes amb espais buits
             estatDeLaPartida.respostesUsuari = new Array(preguntes.length).fill(null);
             
@@ -191,7 +210,7 @@
             }
         });
         // NOU: Lògica per al botó d'Enviar Resultats
-        document.getElementById('btn-enviar').addEventListener('click', function() {
+        document.getElementById('btn-enviar').addEventListener('click', async function() {
             // 1. Comprovem si ha respost totes les preguntes abans de deixar-lo enviar
             if (estatDeLaPartida.respostesUsuari.includes(null)) {
                 alert("Si us plau, respon totes les preguntes abans d'enviar el test.");
@@ -204,18 +223,46 @@
             // 3. Amaguem els controls de navegació (Anterior, Següent, Enviar)
             document.getElementById('controls-navegacio').classList.add('hidden');
             
-            // 4. Mostrem el missatge de finalització substituint les preguntes
-            document.getElementById('partida').innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <h2>Test Finalitzat! 🏁</h2>
-                    <p>Has completat les ${llistaPreguntes.length} preguntes.</p>
-                    <p>Temps total: <strong>${estatDeLaPartida.tempsTranscorregut} segons</strong>.</p>
-                    <p><em>(A la propera iteració enviarem aquestes dades al servidor)</em></p>
-                </div>
-            `;
+            try {
+                const response = await fetch('/respostes');
+                const data = await response.json();
+                const solucions = new Map(data.solucions_servidor.map(solucio => [solucio.id, solucio.resposta_correcta]));
+                
+                //Toma las preguntas incorrectas, guardado tanto la pregunta y el index.
+                const preguntesIncorrectes = llistaPreguntes.map((pregunta, index) => ({ pregunta, index})) .filter(({ pregunta, index}) => {
+                    return estatDeLaPartida.respostesUsuari[index] !== solucions.get(pregunta.id);
+                });
 
-            // 5. Mostrem per consola el que enviarem al servidor més endavant
-            console.log("Test enviat! Dades a processar:", estatDeLaPartida.respostesUsuari);
+
+                const llistaIncorrectes = preguntesIncorrectes.length
+                    ? preguntesIncorrectes.map(({pregunta, index}) => `
+                    <li>
+                        <strong>${pregunta.pregunta}</strong>
+                        <p class="res-incorect">La teva resposta: ${estatDeLaPartida.respostesUsuari[index]}</p>
+                        <p class="res-correct">Resposta correcta: ${solucions.get(pregunta.id)}</p>
+                    </li>
+                    
+                `).join('')
+                : '<li>Has respost totes les preguntes correctament.</li>';
+
+                
+                //
+                
+                document.getElementById('partida').innerHTML = `
+                    <div class="resultat-final">
+                        <h2>Test Finalitzat!</h2>
+                        <p>Has encertat <strong>${llistaPreguntes.length - preguntesIncorrectes.length} de ${llistaPreguntes.length}</strong> preguntes.</p>
+                        <p>Temps total: <strong>${estatDeLaPartida.tempsTranscorregut} segons</strong>.</p>
+                        <h3>Preguntes respostes incorrectament</h3>
+                        <ol>${llistaIncorrectes}</ol>
+                    </div>
+                `;
+
+                //
+
+            } catch (error) {
+                console.error('No s\'han pogut carregar les respostes correctes:', error);
+            }
         });
     </script>
 </body>
