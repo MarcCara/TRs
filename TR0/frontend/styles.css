@@ -153,6 +153,14 @@ button:focus-visible {
     line-height: 1.25;
 }
 
+.imatge-pregunta {
+    display: block;
+    max-width: 100%;
+    max-height: 340px;
+    margin: 0 auto 20px;
+    object-fit: contain;
+}
+
 .btn-resposta {
     width: 100%;
     margin-top: 10px;
