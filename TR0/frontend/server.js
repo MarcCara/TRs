@@ -1,6 +1,8 @@
 const express = require('../backend/node_modules/express');
 const path = require('path');
 const mysql = require('../backend/node_modules/mysql2/promise');
+const preguntesLocals = require('../backend/preguntes.json').preguntes_client;
+const solucionsLocals = require('../backend/respuestas.json').solucions_servidor;
 const app = express();
 const port = 3000;  
 //const port = Number(process.argv[2]) || 40400;
@@ -189,32 +191,13 @@ app.delete('/api/preguntes/:id', async (req, res) => {
   res.status(204).end();
 });
 
-app.get('/preguntes', async (req, res) => {
-  const [files] = await database.query(`
-    SELECT p.id, p.pregunta, p.imatge, o.text_opcio
-    FROM preguntes p
-    INNER JOIN opcions o ON o.pregunta_id = p.id
-    ORDER BY p.id, o.posicio
-  `);
-  const preguntesPerId = new Map();
-  for (const fila of files) {
-    if (!preguntesPerId.has(fila.id)) {
-      preguntesPerId.set(fila.id, {
-        id: fila.id,
-        pregunta: fila.pregunta,
-        imatge: fila.imatge,
-        opcions: []
-      });
-    }
-    preguntesPerId.get(fila.id).opcions.push(fila.text_opcio);
-  }
-
+app.get('/preguntes', (req, res) => {
   //Genera la partida
   const sessionId = uuidv4();
   console.log(`Partida Iniciada ID de la sessió: ${sessionId}`);
 
   //Barajar las preguntas
-  const totesLesPreguntes = [...preguntesPerId.values()];
+  const totesLesPreguntes = preguntesLocals;
   const preguntesMezclades = [...totesLesPreguntes].sort(() => Math.random() - 0.5);
   
   //Se seleccionan 10 preguntas
@@ -248,15 +231,8 @@ app.get('/preguntes', async (req, res) => {
   });
 });
 
-app.get('/respostes', async (req, res) => {
-  const [files] = await database.query(`
-    SELECT p.id, o.text_opcio AS resposta_correcta
-    FROM preguntes p
-    INNER JOIN opcions o ON o.pregunta_id = p.id
-    WHERE o.es_correcta = TRUE
-    ORDER BY p.id
-  `);
-  res.json({ solucions_servidor: files });
+app.get('/respostes', (req, res) => {
+  res.json({ solucions_servidor: solucionsLocals });
 });
 
 app.listen(port, () => {
