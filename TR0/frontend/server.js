@@ -1,8 +1,6 @@
 const express = require('../backend/node_modules/express');
 const path = require('path');
 const mysql = require('../backend/node_modules/mysql2/promise');
-const preguntesLocals = require('../backend/preguntes.json').preguntes_client;
-const solucionsLocals = require('../backend/respuestas.json').solucions_servidor;
 const app = express();
 const port = 3000;  
 //const port = Number(process.argv[2]) || 40400;
@@ -191,13 +189,13 @@ app.delete('/api/preguntes/:id', async (req, res) => {
   res.status(204).end();
 });
 
-app.get('/preguntes', (req, res) => {
+app.get('/preguntes', async (req, res) => {
   //Genera la partida
   const sessionId = uuidv4();
   console.log(`Partida Iniciada ID de la sessió: ${sessionId}`);
 
   //Barajar las preguntas
-  const totesLesPreguntes = preguntesLocals;
+  const totesLesPreguntes = await obtenirPreguntes();
   const preguntesMezclades = [...totesLesPreguntes].sort(() => Math.random() - 0.5);
   
   //Se seleccionan 10 preguntas
@@ -231,8 +229,12 @@ app.get('/preguntes', (req, res) => {
   });
 });
 
-app.get('/respostes', (req, res) => {
-  res.json({ solucions_servidor: solucionsLocals });
+app.get('/respostes', async (req, res) => {
+  const preguntes = await obtenirPreguntes();
+  const solucions = preguntes
+    .filter(pregunta => pregunta.resposta_correcta !== null)
+    .map(({ id, resposta_correcta }) => ({ id, resposta_correcta }));
+  res.json({ solucions_servidor: solucions });
 });
 
 app.listen(port, () => {
