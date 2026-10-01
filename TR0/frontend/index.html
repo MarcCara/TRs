@@ -8,18 +8,16 @@
 </head>
 <body>
 
-    <h1>Test de Conduir</h1>
+    <header class="capcalera-pagina">
+        <h1>Test de Conduir</h1>
+        <button id="btn-esborrar-nom" class="hidden">Cerrar sesión</button>
+    </header>
 
     <div id="seccio-usuari">
         <div id="formulari-nom">
             <label for="input-nom">Introdueix el teu nom:</label>
             <input type="text" id="input-nom" placeholder="El teu nom">
             <button id="btn-guardar-nom">Guardar</button>
-        </div>
-        
-        <div id="salutacio-usuari" class="hidden">
-            <h3 id="missatge-salutacio" style="margin-top: 0;"></h3>
-            <button id="btn-esborrar-nom">Cerrar sesión</button>
         </div>
     </div>
     
@@ -41,12 +39,11 @@
         function gestionarUsuari() {
             const nomGuardat = localStorage.getItem('nomUsuari');
             if (nomGuardat) {
-                document.getElementById('formulari-nom').classList.add('hidden');
-                document.getElementById('salutacio-usuari').classList.remove('hidden');
-                document.getElementById('missatge-salutacio').textContent = `Hola, ${nomGuardat}! Benvingut de nou.`;
+                document.getElementById('seccio-usuari').classList.add('hidden');
+                document.getElementById('btn-esborrar-nom').classList.remove('hidden');
             } else {
-                document.getElementById('formulari-nom').classList.remove('hidden');
-                document.getElementById('salutacio-usuari').classList.add('hidden');
+                document.getElementById('seccio-usuari').classList.remove('hidden');
+                document.getElementById('btn-esborrar-nom').classList.add('hidden');
             }
         }
         localStorage.removeItem('nomUsuari');
@@ -149,8 +146,12 @@
                 htmlTotal += `
                     <div id="pregunta-div-${index}" class="pregunta-contenidor hidden">
                         <h2>${index + 1}. ${preg.pregunta}</h2>
-                        ${imatgeHTML}
-                        ${botonsHTML}
+                        <div class="pregunta-visual">
+                            ${imatgeHTML}
+                        </div>
+                        <div class="opcions-pregunta">
+                            ${botonsHTML}
+                        </div>
                     </div>
                 `;
             });
