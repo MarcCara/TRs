@@ -114,10 +114,7 @@
         }
 
         function iniciarPartida(preguntes) {
-            llistaPreguntes = preguntes.map((pregunta, index) => ({
-                ...pregunta,
-                numero: index + 1
-            }));
+            llistaPreguntes = preguntes;
             document.getElementById('panell-info').classList.remove('hidden');
             document.getElementById('partida').classList.remove('hidden');
             // Inicialitzem l'array de respostes amb espais buits
@@ -144,15 +141,11 @@
                 const botonsHTML = preg.opcions.map(opcion => 
                     `<button class="btn-resposta" data-index="${index}">${opcion}</button>`
                 ).join(' ');
-                const imatgeHTML = preg.imatge
-                    ? `<img class="imatge-pregunta" src="${preg.imatge}" alt="Imatge de la pregunta ${preg.numero}" loading="lazy">`
-                    : '';
 
                 // Cada pregunta és un div. Les amaguem totes per defecte afegint 'hidden'
                 htmlTotal += `
                     <div id="pregunta-div-${index}" class="pregunta-contenidor hidden">
-                        <h2>${preg.numero}. ${preg.pregunta}</h2>
-                        ${imatgeHTML}
+                        <h2>${index + 1}. ${preg.pregunta}</h2>
                         ${botonsHTML}
                     </div>
                 `;
@@ -265,7 +258,7 @@
                 const llistaIncorrectes = preguntesIncorrectes.length
                     ? preguntesIncorrectes.map(({pregunta, index}) => `
                     <li>
-                        <strong>${pregunta.numero}. ${pregunta.pregunta}</strong>
+                        <strong>${pregunta.pregunta}</strong>
                         <p class="res-incorect">La teva resposta: ${estatDeLaPartida.respostesUsuari[index]}</p>
                         <p class="res-correct">Resposta correcta: ${solucions.get(pregunta.id)}</p>
                     </li>
@@ -282,7 +275,7 @@
                         <p>Has encertat <strong>${llistaPreguntes.length - preguntesIncorrectes.length} de ${llistaPreguntes.length}</strong> preguntes.</p>
                         <p>Temps total: <strong>${estatDeLaPartida.tempsTranscorregut} segons</strong>.</p>
                         <h3>Preguntes respostes incorrectament</h3>
-                        <ul>${llistaIncorrectes}</ul>
+                        <ol>${llistaIncorrectes}</ol>
                     </div>
                 `;
 

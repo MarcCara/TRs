@@ -1,5 +1,30 @@
 # Base de dades del QUIZ
 
+## Prova local amb Docker
+
+Des de la carpeta `TR0`, inicieu MySQL:
+
+```powershell
+docker compose up -d --wait
+```
+
+Docker crearà la base de dades `quiz` i les taules a partir de `backend/database.sql`. Després, des de `TR0/backend`, importeu les preguntes i respostes:
+
+```powershell
+$env:DB_HOST = '127.0.0.1'
+$env:DB_PORT = '3306'
+$env:DB_USER = 'quiz'
+$env:DB_PASSWORD = 'quiz_local_password'
+$env:DB_NAME = 'quiz'
+npm run migrate
+```
+
+Amb aquestes variables encara definides, inicieu el servidor des de `TR0` amb `node frontend/server.js` i comproveu `http://localhost:3000/api/preguntes`. Hauria de retornar les preguntes desades a MySQL. En acabar, atureu el contenidor amb `docker compose down`; les dades es conserven al volum `mysql_data`. Per reiniciar la base de dades des de zero, elimineu el volum amb `docker compose down -v`.
+
+Les contrasenyes del fitxer `compose.yaml` són només per a aquesta prova local; no les feu servir al servidor.
+
+## Desplegament
+
 1. Creeu una base de dades i un usuari per a ella des de HestiaCP. Anoteu el nom complet de la base de dades, que pot incloure un prefix.
 2. Obriu phpMyAdmin des de HestiaCP, seleccioneu aquesta base de dades, obriu la pestanya SQL i executeu el contingut de `database.sql` per crear les taules.
 3. Configureu les variables d'entorn amb les dades de HestiaCP abans d'executar la migració i iniciar el servidor:
