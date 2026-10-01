@@ -8,7 +8,7 @@
         "Paviment lliscant",
         "Calçada estreta"
       ],
-      "imatge": "/imagenes/limite_velocidad.jpg"
+      "imatge": "/imagenes/paviment_lliscant.jpg"
     },
     {
       "id": 2,
@@ -18,7 +18,7 @@
         "100 km/h",
         "90 km/h"
       ],
-      "imatge": "/imagenes/velocitat_120.jpg"
+      "imatge": "/imagenes/limite_velocidad.jpg"
     },
     {
       "id": 3,

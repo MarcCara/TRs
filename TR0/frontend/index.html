@@ -141,11 +141,15 @@
                 const botonsHTML = preg.opcions.map(opcion => 
                     `<button class="btn-resposta" data-index="${index}">${opcion}</button>`
                 ).join(' ');
+                const imatgeHTML = preg.imatge
+                    ? `<img class="imatge-pregunta" src="${preg.imatge}" alt="Imatge de la pregunta ${index + 1}" loading="lazy">`
+                    : '';
 
                 // Cada pregunta és un div. Les amaguem totes per defecte afegint 'hidden'
                 htmlTotal += `
                     <div id="pregunta-div-${index}" class="pregunta-contenidor hidden">
                         <h2>${index + 1}. ${preg.pregunta}</h2>
+                        ${imatgeHTML}
                         ${botonsHTML}
                     </div>
                 `;
