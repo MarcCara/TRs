@@ -22,7 +22,7 @@
     </div>
     
     <div id="panell-info" class="hidden">
-        <div id="marcador"></div>
+        <nav id="marcador" aria-label="Navegació de preguntes"></nav>
         <div id="temporitzador"><strong>Temps: 0s</strong></div>
     </div>
     
@@ -175,6 +175,8 @@
             const btnSeguent = document.getElementById('btn-seguent');
             const btnEnviar = document.getElementById('btn-enviar');
 
+            renderitzarMarcador();
+
             // Desactivar "Anterior" si estem a la primera
             btnAnterior.disabled = (estatDeLaPartida.preguntaActualIndex === 0);
 
@@ -192,7 +194,6 @@
                 btnEnviar.classList.add('hidden');
             }
 
-            renderitzarMarcador();
         }
 
         // NOU: Escoltem els botons de navegació
@@ -210,10 +211,30 @@
             }
         });
 
+        document.getElementById('marcador').addEventListener('click', event => {
+            const botoPregunta = event.target.closest('.btn-pregunta-nav');
+            if (!botoPregunta) return;
+
+            estatDeLaPartida.preguntaActualIndex = Number(botoPregunta.dataset.index);
+            actualitzarVista();
+        });
+
         function renderitzarMarcador() {
-            // Comptem quantes respostes no són "null"
-            const respostesFetes = estatDeLaPartida.respostesUsuari.filter(r => r !== null).length;
-            document.getElementById('marcador').innerHTML = `<strong>Preguntes respostes: ${respostesFetes} de ${llistaPreguntes.length}</strong>`;
+            document.getElementById('marcador').innerHTML = llistaPreguntes
+                .map((_, index) => {
+                    const respostaFeta = estatDeLaPartida.respostesUsuari[index] !== null;
+                    const preguntaActual = index === estatDeLaPartida.preguntaActualIndex;
+                    const classes = [
+                        'btn-pregunta-nav',
+                        respostaFeta ? 'resposta-feta' : '',
+                        preguntaActual ? 'pregunta-actual' : ''
+                    ].filter(Boolean).join(' ');
+                    const estatResposta = respostaFeta ? 'resposta' : 'sense respondre';
+                    const ariaActual = preguntaActual ? ' aria-current="step"' : '';
+
+                    return `<button type="button" class="${classes}" data-index="${index}" aria-label="Pregunta ${index + 1}, ${estatResposta}"${ariaActual}>${index + 1}</button>`;
+                })
+                .join('');
         }
 
         document.getElementById('partida').addEventListener('click', function(event) {
@@ -254,37 +275,61 @@
                 const data = await response.json();
                 const solucions = new Map(data.solucions_servidor.map(solucio => [solucio.id, solucio.resposta_correcta]));
                 
-                //Toma las preguntas incorrectas, guardado tanto la pregunta y el index.
-                const preguntesIncorrectes = llistaPreguntes.map((pregunta, index) => ({ pregunta, index})) .filter(({ pregunta, index}) => {
-                    return estatDeLaPartida.respostesUsuari[index] !== solucions.get(pregunta.id);
-                });
-
-
-                const llistaIncorrectes = preguntesIncorrectes.length
-                    ? preguntesIncorrectes.map(({pregunta, index}) => `
-                    <li>
-                        <strong>${pregunta.pregunta}</strong>
-                        <p class="res-incorect">La teva resposta: ${estatDeLaPartida.respostesUsuari[index]}</p>
-                        <p class="res-correct">Resposta correcta: ${solucions.get(pregunta.id)}</p>
-                    </li>
-                    
-                `).join('')
-                : '<li>Has respost totes les preguntes correctament.</li>';
-
+                const botonsResultat = llistaPreguntes.map((pregunta, index) => {
+                    const correcta = estatDeLaPartida.respostesUsuari[index] === solucions.get(pregunta.id);
+                    const estatResposta = correcta ? 'correcta' : 'incorrecta';
+                    return `<button type="button" class="btn-resultat ${correcta ? 'correcta' : 'incorrecta'}" data-index="${index}" aria-label="Pregunta ${index + 1}: resposta ${estatResposta}" aria-controls="detalle-respuesta" aria-expanded="false" title="Pregunta ${index + 1}: ${estatResposta}">${index + 1}</button>`;
+                }).join('');
                 
-                //
-                
+                document.getElementById('panell-info').classList.add('hidden');
                 document.getElementById('partida').innerHTML = `
                     <div class="resultat-final">
                         <h2>Test Finalitzat!</h2>
-                        <p>Has encertat <strong>${llistaPreguntes.length - preguntesIncorrectes.length} de ${llistaPreguntes.length}</strong> preguntes.</p>
+                        <h3>Resultat per pregunta</h3>
+                        <div class="botons-resultat" aria-label="Resultat de cada pregunta">${botonsResultat}</div>
+                        <section id="detalle-respuesta" class="detalle-respuesta" aria-live="polite" hidden></section>
                         <p>Temps total: <strong>${estatDeLaPartida.tempsTranscorregut} segons</strong>.</p>
-                        <h3>Preguntes respostes incorrectament</h3>
-                        <ol>${llistaIncorrectes}</ol>
                     </div>
                 `;
 
-                //
+                document.querySelector('.botons-resultat').addEventListener('click', event => {
+                    const botonResultado = event.target.closest('.btn-resultat');
+                    if (!botonResultado) return;
+
+                    const panelDetalle = document.getElementById('detalle-respuesta');
+                    const index = Number(botonResultado.dataset.index);
+                    if (botonResultado.getAttribute('aria-expanded') === 'true') {
+                        botonResultado.setAttribute('aria-expanded', 'false');
+                        panelDetalle.hidden = true;
+                        panelDetalle.replaceChildren();
+                        return;
+                    }
+
+                    document.querySelectorAll('.btn-resultat').forEach(boton => {
+                        boton.setAttribute('aria-expanded', 'false');
+                    });
+                    botonResultado.setAttribute('aria-expanded', 'true');
+
+                    const pregunta = llistaPreguntes[index];
+                    const respuestaUsuario = estatDeLaPartida.respostesUsuari[index];
+                    const respuestaCorrecta = solucions.get(pregunta.id);
+                    const esCorrecta = respuestaUsuario === respuestaCorrecta;
+                    const titulo = document.createElement('h4');
+                    titulo.textContent = `Pregunta ${index + 1}: ${pregunta.pregunta}`;
+
+                    const respuestaCorrectaTexto = document.createElement('p');
+                    respuestaCorrectaTexto.className = 'respuesta-correcta-detalle';
+                    respuestaCorrectaTexto.textContent = `Resposta correcta: ${respuestaCorrecta}`;
+
+                    const respuestaUsuarioTexto = document.createElement('p');
+                    respuestaUsuarioTexto.className = esCorrecta
+                        ? 'respuesta-usuario-detalle correcta'
+                        : 'respuesta-usuario-detalle incorrecta';
+                    respuestaUsuarioTexto.textContent = `La teva resposta: ${respuestaUsuario}`;
+
+                    panelDetalle.replaceChildren(titulo, respuestaCorrectaTexto, respuestaUsuarioTexto);
+                    panelDetalle.hidden = false;
+                });
 
             } catch (error) {
                 console.error('No s\'han pogut carregar les respostes correctes:', error);
